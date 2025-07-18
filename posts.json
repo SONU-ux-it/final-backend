@@ -1,0 +1,59 @@
+[
+  {
+    "id": "8b688425-3c63-4cb4-8209-4cd5ca7877cf",
+    "name": "babu lal",
+    "phone": "9636761873",
+    "email": "krishnkrishn3093@gmail.com",
+    "gender": "Male",
+    "message": "hjkkk",
+    "replies": []
+  },
+  {
+    "id": "bd0d2e09-a842-4d72-83ff-58253b375061",
+    "name": "sonu",
+    "phone": "6952155525",
+    "email": "krishn240@gmail.com",
+    "room_type": "1BHK",
+    "gender": "Boys",
+    "facilities": "SOMUNSJNS\n",
+    "deposit": "400",
+    "available_from": "275760-04-04",
+    "location": "24.562398669929728, 73.7256595740986",
+    "map_link": "https://maps.app.goo.gl/NUVvbE4b9fZSNVCX9",
+    "rent_by_person": {
+      "1": "1500"
+    },
+    "imageLinks": [
+      "https://i.ibb.co/MDDg5mS8/ab033f282257.jpg",
+      "https://i.ibb.co/6RyXqFhD/c6362eeb3f82.jpg"
+    ],
+    "timestamp": "2025-07-16T17:19:14.262Z"
+  },
+  {
+    "id": "ec753b1f-a483-4b9a-878f-ca2ca42b1156",
+    "name": "babu lal",
+    "phone": "9636761873",
+    "email": "krishnkrishn3093@gmail.com",
+    "gender": "Female",
+    "message": "sonu h bhai",
+    "replies": []
+  },
+  {
+    "id": "340d197e-f820-4c1d-a489-82b46198b464",
+    "name": "babu lal",
+    "phone": "9636761873",
+    "email": "krishnkrishn3093@gmail.com",
+    "gender": "Female",
+    "message": "ki\n",
+    "replies": []
+  },
+  {
+    "id": "04ff7980-57e9-44b4-ab17-1cf34bb2adc1",
+    "name": "babu lal",
+    "phone": "9636761873",
+    "email": "krishnkrishn3093@gmail.com",
+    "gender": "Male",
+    "message": "sonu h bhai",
+    "replies": []
+  }
+]
