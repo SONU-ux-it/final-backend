@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Find a Roommate</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom right, #fff8dc, #ffe680);
+      padding: 20px;
+    }
+    h2 { text-align: center; color: #333; }
+    #roommateForm, #posts {
+      max-width: 600px;
+      margin: 20px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, textarea, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    .post {
+      background: #f9f9f9;
+      margin-top: 10px;
+      padding: 10px;
+      border-left: 5px solid #ffa500;
+      border-radius: 5px;
+    }
+    .btn { background-color: orange; color: white; border: none; cursor: pointer; }
+    .reply-box { background: #eee; margin-top: 8px; padding: 8px; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <h2>Find a Roommate</h2>
+
+  <form id="roommateForm">
+    <input type="text" name="name" placeholder="Your Name" required />
+    <input type="tel" name="phone" placeholder="Phone Number" required />
+    <input type="email" name="email" placeholder="Email" required />
+    <select name="gender" required>
+      <option value="">Select Gender</option>
+      <option value="Male">Male</option>
+      <option value="Female">Female</option>
+      <option value="Other">Other</option>
+    </select>
+    <textarea name="message" placeholder="Your Message" required></textarea>
+    <button type="submit" class="btn">Submit</button>
+  </form>
+
+  <div id="posts"><h3>Roommate Requests</h3></div>
+
+  <script>
+    async function loadPosts() {
+      const res = await fetch("http://localhost:3000/posts");
+      const data = await res.json();
+      const container = document.getElementById("posts");
+      container.innerHTML = '<h3>Roommate Requests</h3>';
+      for (const post of data) {
+        const div = document.createElement('div');
+        div.className = "post";
+        div.innerHTML = `<strong>${post.name}</strong> (${post.gender})<br>${post.message}<br>
+          <button onclick="replyPrompt('${post.id}')">Reply</button>
+          <div id="replies-${post.id}"></div>`;
+        container.appendChild(div);
+        loadReplies(post.id);
+      }
+    }
+
+    async function replyPrompt(postId) {
+      const fromName = prompt("Your name:");
+      const fromGender = prompt("Your gender:");
+      const message = prompt("Your message:");
+      if (!fromName || !fromGender || !message) return;
+      await fetch("http://localhost:3000/reply-roommate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId, fromName, fromGender, message })
+      });
+      loadReplies(postId);
+    }
+
+    async function loadReplies(postId) {
+      const res = await fetch("http://localhost:3000/get-post-replies", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId })
+      });
+      const replies = await res.json();
+      const replyBox = document.getElementById("replies-" + postId);
+      replyBox.innerHTML = replies.map(r => `
+        <div class="reply-box">
+          <b>${r.fromName}</b> (${r.fromGender})<br>${r.text}<br>
+          <small>${new Date(r.timestamp).toLocaleString()}</small>
+        </div>
+      `).join("");
+    }
+
+    document.getElementById("roommateForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData);
+      const res = await fetch("http://localhost:3000/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      const json = await res.json();
+      alert("Post submitted! Check your email for delete link.");
+      e.target.reset();
+      loadPosts();
+    });
+
+    loadPosts();
+  </script>
+</body>
+</html>

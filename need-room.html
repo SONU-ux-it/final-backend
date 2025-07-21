@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Need a Room</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom right, #fff8dc, #ffe680);
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    .filter-section {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+
+    .filter-section select, .filter-section input {
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    .room-card {
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      margin: 20px auto;
+      max-width: 600px;
+      padding: 15px;
+      background: white;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .slider {
+      position: relative;
+      width: 100%;
+      height: 300px;
+      overflow: hidden;
+      border-radius: 10px;
+    }
+
+    .slider img {
+      width: 100%;
+      height: 300px;
+      object-fit: cover;
+      display: none;
+    }
+
+    .slider img.active {
+      display: block;
+    }
+
+    .slider-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 24px;
+      background: rgba(0,0,0,0.5);
+      color: white;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .slider-btn.left {
+      left: 10px;
+    }
+
+    .slider-btn.right {
+      right: 10px;
+    }
+
+    .room-details {
+      margin-top: 15px;
+    }
+
+    .room-details p {
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Available Rooms</h1>
+
+  <!-- Filters -->
+  <div class="filter-section">
+    <select id="filter-gender" onchange="applyFilters()">
+      <option value="">Gender</option>
+      <option value="Boys">Boys</option>
+      <option value="Girls">Girls</option>
+      <option value="FAMILY">FAMILY</option>
+    </select>
+
+    <select id="filter-budget" onchange="applyFilters()">
+      <option value="">Budget</option>
+      <option value="1000">Under ₹1K</option>
+      <option value="2000">Under ₹2K</option>
+      <option value="3000">Under ₹3K</option>
+      <option value="4000">Under ₹4K</option>
+      <option value="5000">Under ₹5K</option>
+      <option value="6000">Under ₹6K</option>
+      <option value="7000">Under ₹7K</option>
+      <option value="8000">Under ₹8K</option>
+      <option value="9000">Under ₹9K</option>
+      <option value="10000">Under ₹10K</option>
+      <option value="15000">Under ₹15K</option>
+      <option value="above">Above ₹15K</option>
+    </select>
+
+    <input type="text" id="filter-location" placeholder="Location" oninput="applyFilters()">
+
+    <select id="filter-bhk" onchange="applyFilters()">
+      <option value="">BHK Type</option>
+      <option value="1BHK">1BHK</option>
+      <option value="2BHK">2BHK</option>
+      <option value="HOSTEL">HOSTEL</option>
+      <option value="SINGLE ROOM">SINGLE ROOM</option>
+      <option value="FLAT">FLAT</option>
+      <option value="PG">PG</option>
+    </select>
+  </div>
+
+  <!-- Room Cards -->
+  <div id="rooms-container"></div>
+
+  <script>
+    const roomsData = [
+      {
+        images: [
+          "https://via.placeholder.com/600x300?text=Room1-A",
+          "https://via.placeholder.com/600x300?text=Room1-B",
+          "https://via.placeholder.com/600x300?text=Room1-C",
+          "https://via.placeholder.com/600x300?text=Room1-D"
+        ],
+        details: {
+          name: "Amit Singh",
+          gender: "Boys",
+          phone: "9876543210",
+          email: "amit@example.com",
+          type: "1BHK",
+          location: "Patna",
+          available: "Yes",
+          facilities: "WiFi, Water, Parking",
+          rent: 4500,
+          deposit: "2000",
+          date: "2025-06-20"
+        }
+      },
+      {
+      images: [
+         "https://i.ibb.co/MDDg5mS8/ab033f282257.jpg",
+      "https://i.ibb.co/6RyXqFhD/c6362eeb3f82.jpg"  
+        ],
+        details: {
+          name: "SONU ACHARYA",
+          gender: "Boys",
+          phone: "6375597949",
+          email: "amit@example.com",
+          type: "1BHK",
+          location: "UDAIPUR SECTOR 5",
+          available: "Yes",
+          facilities: "WiFi, Water, Parking",
+          rent: 4500,
+          deposit: "2000",
+          date: "2025-06-20"
+        }
+      },
+      {
+      
+        images: [
+          
+        ],
+        details: {
+          name: "Rohit Kumar",
+          gender: "Both",
+          phone: "9876543222",
+          email: "rohit@example.com",
+          type: "2BHK",
+          location: "Ranchi",
+          available: "Yes",
+          facilities: "Fridge, AC, Balcony",
+          rent: 4500,
+          deposit: "2500",
+          date: "2025-06-21"
+        }
+      },
+    ];
+
+    const container = document.getElementById("rooms-container");
+
+    function renderRooms(data) {
+      container.innerHTML = ""; // Clear previous rooms
+      data.forEach((room, index) => {
+        const card = document.createElement("div");
+        card.className = "room-card";
+
+        const sliderId = `slider-${index}`;
+        let sliderHTML = `
+          <div class="slider" id="${sliderId}">
+            ${room.images.map((src, i) => `<img src="${src}" class="${i === 0 ? 'active' : ''}">`).join("")}
+            <button class="slider-btn left" onclick="changeSlide('${sliderId}', -1)">&#8592;</button>
+            <button class="slider-btn right" onclick="changeSlide('${sliderId}', 1)">&#8594;</button>
+          </div>`;
+
+        const d = room.details;
+        let detailHTML = `
+          <div class="room-details">
+            <p><strong>Name:</strong> ${d.name}</p>
+            <p><strong>Gender:</strong> ${d.gender}</p>
+            <p><strong>Phone:</strong> ${d.phone}</p>
+            <p><strong>Email:</strong> ${d.email}</p>
+            <p><strong>Room Type:</strong> ${d.type}</p>
+            <p><strong>Location:</strong> ${d.location}</p>
+            <p><strong>Available:</strong> ${d.available}</p>
+            <p><strong>Facilities:</strong> ${d.facilities}</p>
+            <p><strong>Rent:</strong> ₹${d.rent}</p>
+            <p><strong>Deposit:</strong> ₹${d.deposit}</p>
+            <p><strong>Date:</strong> ${d.date}</p>
+          </div>`;
+
+        card.innerHTML = sliderHTML + detailHTML;
+        container.appendChild(card);
+      });
+    }
+
+    function changeSlide(sliderId, direction) {
+      const slider = document.getElementById(sliderId);
+      const images = slider.querySelectorAll("img");
+      let activeIndex = Array.from(images).findIndex(img => img.classList.contains("active"));
+      images[activeIndex].classList.remove("active");
+      let newIndex = (activeIndex + direction + images.length) % images.length;
+      images[newIndex].classList.add("active");
+    }
+
+    function applyFilters() {
+      const gender = document.getElementById("filter-gender").value.toLowerCase();
+      const budgetVal = document.getElementById("filter-budget").value;
+      const location = document.getElementById("filter-location").value.toLowerCase();
+      const bhk = document.getElementById("filter-bhk").value.toLowerCase();
+
+      const maxBudget = budgetVal ? parseInt(budgetVal) : Infinity;
+
+      const filtered = roomsData.filter(room => {
+        const d = room.details;
+
+        return (
+          (!gender || d.gender.toLowerCase() === gender) &&
+          (!location || d.location.toLowerCase().includes(location)) &&
+          (!bhk || d.type.toLowerCase() === bhk) &&
+          (parseInt(d.rent) <= maxBudget)
+        );
+      });
+
+      renderRooms(filtered);
+    }
+
+    // Initial render
+    renderRooms(roomsData);
+  </script>
+</body>
+</html>

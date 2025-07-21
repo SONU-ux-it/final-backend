@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Post a Room</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom right, #fff8dc, #ffe680);
+      padding: 20px;
+      overflow-x: hidden;
+    }
+    h2 {
+      text-align: center;
+      color: #b8860b;
+      font-size: 36px;
+    }
+    form {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 0px 15px rgba(184, 134, 11, 0.3);
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+      color: #8b6508;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 4px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      background-color: gold;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+    button:hover {
+      background-color: #ffd700;
+    }
+    #congratsMessage {
+      display: none;
+      text-align: center;
+      font-size: 28px;
+      color: green;
+      margin-top: 50px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Post a Room</h2>
+
+  <form id="roomForm" enctype="multipart/form-data">
+    <label>Name</label>
+    <input type="text" name="name" required>
+
+    <label>Phone Number</label>
+    <input type="tel" name="phone" required>
+
+    <label>Email</label>
+    <input type="email" name="email" required>
+
+    <label>Room Type</label>
+    <select name="room_type" required>
+      <option value="">Select</option>
+      <option>1BHK</option>
+      <option>2BHK</option>
+      <option>Flat</option>
+      <option>Hostel</option>
+      <option>PG</option>
+      <option>Single Room</option>
+    </select>
+
+    <label>Gender Allowed</label>
+    <select name="gender" required>
+      <option value="">Select</option>
+      <option>Boys</option>
+      <option>Girls</option>
+      <option>Both</option>
+      <option>Family</option>
+    </select>
+
+    <label>Facilities</label>
+    <textarea name="facilities" required></textarea>
+
+    <label>Rent per Person (₹)</label>
+    <div id="personRentFields"></div>
+    <button type="button" onclick="addPersonRentField()">➕ Add Person Rent</button>
+
+    <label>Deposit (₹)</label>
+    <input type="number" name="deposit">
+
+    <label>Available From</label>
+    <input type="date" name="available_from" required>
+
+    <label>Upload Photos</label>
+    <div id="photoFields"></div>
+    <button type="button" onclick="addImageField()">➕ Add Image</button>
+
+    <label>Enter Your Location</label>
+    <input type="text" name="location" required>
+
+    <label>Paste your room link by Google Map</label>
+    <input type="url" name="map_link" required>
+
+    <button type="submit">Submit</button>
+  </form>
+
+  <div id="congratsMessage">
+    🎉 Congratulations! Your Room has been Posted Successfully!
+  </div>
+
+  <script>
+    let rentFieldCount = 0;
+    const maxPersons = 8;
+    function addPersonRentField() {
+      if (rentFieldCount >= maxPersons) return alert("You can add up to 8 persons only");
+      rentFieldCount++;
+      const container = document.getElementById("personRentFields");
+      const div = document.createElement("div");
+      div.id = `rentField${rentFieldCount}`;
+      div.innerHTML = `
+        <label>Rent for ${rentFieldCount} person(s)</label>
+        <input type="number" name="rent_person_${rentFieldCount}" required>
+        <button type="button" onclick="removePersonRentField(${rentFieldCount})">❌ Remove</button>
+      `;
+      container.appendChild(div);
+    }
+    function removePersonRentField(index) {
+      const field = document.getElementById(`rentField${index}`);
+      if (field) field.remove();
+      rentFieldCount--;
+    }
+
+    let imageFieldCount = 0;
+    const maxImages = 12;
+    function addImageField() {
+      if (imageFieldCount >= maxImages) return alert("You can add up to 12 images only");
+      imageFieldCount++;
+      const container = document.getElementById("photoFields");
+      const div = document.createElement("div");
+      div.id = `imageField${imageFieldCount}`;
+      div.innerHTML = `
+        <label>Image ${imageFieldCount}</label>
+        <input type="file" name="photo_${imageFieldCount}" accept="image/*" required>
+        <button type="button" onclick="removeImageField(${imageFieldCount})">❌ Remove</button>
+      `;
+      container.appendChild(div);
+    }
+    function removeImageField(index) {
+      const field = document.getElementById(`imageField${index}`);
+      if (field) field.remove();
+      imageFieldCount--;
+    }
+
+    document.getElementById("roomForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const form = e.target;
+      const formData = new FormData(form);
+
+      const imageInputs = document.querySelectorAll('input[type="file"][name^="photo_"]');
+      const uploadedLinks = [];
+
+      for (let input of imageInputs) {
+        const file = input.files[0];
+        if (!file) continue;
+
+        const fullBase64 = await toBase64(file);
+        const base64 = fullBase64.split(",")[1];
+
+        const res = await fetch("https://api.imgbb.com/1/upload?key=9a995e9e45e2bd450029bd6cdafe22c3", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ image: base64 })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          uploadedLinks.push(data.data.url);
+        } else {
+          alert("❌ ImgBB Upload Failed: " + data.error.message);
+          return;
+        }
+      }
+
+      const rentPerPerson = {};
+      for (let i = 1; i <= rentFieldCount; i++) {
+        const rentValue = formData.get(`rent_person_${i}`);
+        if (rentValue) rentPerPerson[i] = rentValue;
+      }
+
+      const jsonPayload = {
+        name: formData.get("name"),
+        phone: formData.get("phone"),
+        email: formData.get("email"),
+        room_type: formData.get("room_type"),
+        gender: formData.get("gender"),
+        facilities: formData.get("facilities"),
+        deposit: formData.get("deposit"),
+        available_from: formData.get("available_from"),
+        location: formData.get("location"),
+        map_link: formData.get("map_link"),
+        rent_by_person: rentPerPerson,
+        imageLinks: uploadedLinks
+      };
+
+      try {
+        const response = await fetch("http://localhost:3000/submit-form", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(jsonPayload)
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          form.style.display = "none";
+          document.getElementById("congratsMessage").style.display = "block";
+        } else {
+          alert("❌ Failed: " + result.message);
+        }
+      } catch (err) {
+        alert("❌ Network Error: " + err.message);
+      }
+    });
+
+    function toBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+  </script>
+</body>
+</html>
