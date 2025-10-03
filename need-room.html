@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,15 +8,14 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: linear-gradient(to bottom right, #fff8dc, #ffe680);
       margin: 0;
       padding: 20px;
+      background: linear-gradient(to bottom right, #fff0c2, #ffe5a4, #ffd080, #ffc266);
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-size: cover;
     }
-
-    h1 {
-      text-align: center;
-      color: #333;
-    }
+    h1 { text-align:center; color:#d46f00; font-size:2.5em; margin-bottom:20px; }
 
     .filter-section {
       display: flex;
@@ -24,248 +24,543 @@
       gap: 10px;
       margin-bottom: 30px;
     }
-
     .filter-section select, .filter-section input {
       padding: 10px;
       font-size: 16px;
+      border-radius: 10px;
+      border: 1px solid #ffa726;
+      background-color: #fff7e0;
     }
 
     .room-card {
-      border: 1px solid #ccc;
-      border-radius: 10px;
+      border-radius: 15px;
       margin: 20px auto;
       max-width: 600px;
       padding: 15px;
-      background: white;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      background: #fff8e1;
+      box-shadow: 0 6px 20px rgba(255, 170, 51, 0.2);
     }
 
-    .slider {
-      position: relative;
-      width: 100%;
-      height: 300px;
-      overflow: hidden;
-      border-radius: 10px;
-    }
+    .slider { position: relative; width: 100%; height: 300px; overflow: hidden; border-radius: 10px; }
+    .slider img { width: 100%; height: 300px; object-fit: cover; display: none; cursor: pointer; }
+    .slider img.active { display: block; }
+    .slider-btn { position: absolute; top: 50%; transform: translateY(-50%); font-size: 24px; background: rgba(0,0,0,0.4); color: white; border: none; padding: 10px; cursor: pointer; }
+    .slider-btn.left { left: 10px; }
+    .slider-btn.right { right: 10px; }
 
-    .slider img {
-      width: 100%;
-      height: 300px;
-      object-fit: cover;
-      display: none;
-    }
+    .room-details p { margin: 5px 0; color: #5c3d00; word-break: break-word; }
+    .room-details a { color: #d46f00; word-break: break-all; }
 
-    .slider img.active {
-      display: block;
-    }
-
-    .slider-btn {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 24px;
-      background: rgba(0,0,0,0.5);
-      color: white;
-      border: none;
-      padding: 10px;
-      cursor: pointer;
-    }
-
-    .slider-btn.left {
-      left: 10px;
-    }
-
-    .slider-btn.right {
-      right: 10px;
-    }
-
-    .room-details {
-      margin-top: 15px;
-    }
-
-    .room-details p {
-      margin: 5px 0;
-    }
+    #fullscreenViewer { display:none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); justify-content:center; align-items:center; z-index:9999; flex-direction: column; }
+    #fullscreenViewer img { max-width:90%; max-height:80%; margin-bottom:20px; }
+    #fullscreenViewer button { font-size:24px; color:white; background:transparent; border:none; cursor:pointer; margin:10px; }
   </style>
 </head>
 <body>
 
-  <h1>Available Rooms</h1>
+<h1>Available Rooms</h1>
 
-  <!-- Filters -->
-  <div class="filter-section">
-    <select id="filter-gender" onchange="applyFilters()">
-      <option value="">Gender</option>
-      <option value="Boys">Boys</option>
-      <option value="Girls">Girls</option>
-      <option value="FAMILY">FAMILY</option>
-    </select>
+<div class="filter-section">
+  <select id="filter-gender" onchange="applyFilters()">
+    <option value="">Gender</option>
+    <option value="Boys">Boys</option>
+    <option value="Girls">Girls</option>
+    <option value="both">Both</option>
+    <option value="FAMILY">Family</option>
+  </select>
 
-    <select id="filter-budget" onchange="applyFilters()">
-      <option value="">Budget</option>
-      <option value="1000">Under ₹1K</option>
-      <option value="2000">Under ₹2K</option>
-      <option value="3000">Under ₹3K</option>
-      <option value="4000">Under ₹4K</option>
-      <option value="5000">Under ₹5K</option>
-      <option value="6000">Under ₹6K</option>
-      <option value="7000">Under ₹7K</option>
-      <option value="8000">Under ₹8K</option>
-      <option value="9000">Under ₹9K</option>
-      <option value="10000">Under ₹10K</option>
-      <option value="15000">Under ₹15K</option>
-      <option value="above">Above ₹15K</option>
-    </select>
+  <select id="filter-budget" onchange="applyFilters()">
+    <option value="">Budget</option>
+    <option value="1000">Under ₹1K</option>
+    <option value="2000">Under ₹2K</option>
+    <option value="3000">Under ₹3K</option>
+    <option value="4000">Under ₹4K</option>
+    <option value="5000">Under ₹5K</option>
+    <option value="6000">Under ₹6K</option>
+    <option value="7000">Under ₹7K</option>
+    <option value="8000">Under ₹8K</option>
+    <option value="9000">Under ₹9K</option>
+    <option value="10000">Under ₹10K</option>
+    <option value="15000">Under ₹15K</option>
+    <option value="above">Above ₹15K</option>
+  </select>
 
-    <input type="text" id="filter-location" placeholder="Location" oninput="applyFilters()">
+  <input type="text" id="filter-location" placeholder="Location" oninput="applyFilters()">
 
-    <select id="filter-bhk" onchange="applyFilters()">
-      <option value="">BHK Type</option>
-      <option value="1BHK">1BHK</option>
-      <option value="2BHK">2BHK</option>
-      <option value="HOSTEL">HOSTEL</option>
-      <option value="SINGLE ROOM">SINGLE ROOM</option>
-      <option value="FLAT">FLAT</option>
-      <option value="PG">PG</option>
-    </select>
+  <select id="filter-bhk" onchange="applyFilters()">
+    <option value="">BHK Type</option>
+    <option value="1BHK">1BHK</option>
+    <option value="2BHK">2BHK</option>
+    <option value="3BHK">3BHK</option>
+    <option value="HOSTEL">HOSTEL</option>
+    <option value="SINGLE ROOM">SINGLE ROOM</option>
+    <option value="FLAT">FLAT</option>
+    <option value="PG">PG</option>
+  </select>
+</div>
+
+<div id="rooms-container"></div>
+
+<!-- Fullscreen Viewer -->
+<div id="fullscreenViewer">
+  <img id="fullImg" src="" alt="Preview" />
+  <div>
+    <button onclick="prevImage()">⬅️</button>
+    <button onclick="closeViewer()">❌</button>
+    <button onclick="nextImage()">➡️</button>
   </div>
+</div>
 
-  <!-- Room Cards -->
-  <div id="rooms-container"></div>
+<script>
+// Example room data
+let roomsData = [
+{
+    images: ["https://i.ibb.co/dsy55Knc/1000344562.jpg",
+    "https://i.ibb.co/ycD1byF8/1000344565.jpg",
+    "https://i.ibb.co/dw1VtZ4P/1000344563.jpg",
+    "https://i.ibb.co/gMfJ6rV8/1000344564.jpg",
+    ],
+    details: {
+      name: "sawariya girls pg",
+      gender: "girls",
+      phone: "9483592711",
+      type: "hostel",
+      location: "sector 3 udaipur <br>https://maps.app.goo.gl/EgKLJdMRHw4ppcZbA",
+      available: "Yes",
+      facilities:  "ac & non-ac room,r.o.,laundry,inverter,wifi",
+      rent: "12000[2-sharing]<br>₹10000[3-sharing]",
+      deposit:  "5000",
+      date: "available"
+    }
+  }, 
+  {
+    images: ["https://i.ibb.co/xSgqK9Q1/Whats-App-Image-2025-08-29-at-10-56-58-fe766631.jpg",
+"https://i.ibb.co/zWwkKMgY/Whats-App-Image-2025-08-29-at-10-56-57-f0badd36.jpg",
+"https://i.ibb.co/WNxd1bW1/Whats-App-Image-2025-08-29-at-10-57-00-ca4bfd26.jpg",
+"https://i.ibb.co/LzhL87q0/Whats-App-Image-2025-08-29-at-10-56-58-f7a0304a.jpg",
+"https://i.ibb.co/QF3PFbGs/Whats-App-Image-2025-08-29-at-10-56-57-c626c3df.jpg",
+    ],
+    details: {
+      name: "Narendra kumar siroya",
+      gender: "girls & family",
+      phone: "9929644465",
+      type: "2bhk",
+      location: "sector 3 udaipur <br>https://maps.app.goo.gl/RD4JB7sNsBHumorSA",
+      available: "Yes",
+      facilities:  "almirah,furniture,bed",
+      rent: "9500",
+      deposit:  "9500",
+      date: "available"
+    }
+  },
+{
+    images: ["https://i.ibb.co/HLF6X8qJ/Whats-App-Image-2025-08-24-at-10-12-54-9e67e5c6.jpg",
+    "https://i.ibb.co/cXQLkQvQ/Whats-App-Image-2025-08-24-at-10-13-21-e7c1957d.jpg",
+    "https://i.ibb.co/0bPCxTT/Whats-App-Image-2025-08-24-at-21-15-10-4f60e556.jpg",
+    "https://i.ibb.co/RpGCVLG7/Whats-App-Image-2025-08-24-at-10-12-54-a7929b1e.jpg",
 
-  <script>
-    const roomsData = [
-      {
-        images: [
-          "https://via.placeholder.com/600x300?text=Room1-A",
-          "https://via.placeholder.com/600x300?text=Room1-B",
-          "https://via.placeholder.com/600x300?text=Room1-C",
-          "https://via.placeholder.com/600x300?text=Room1-D"
-        ],
-        details: {
-          name: "Amit Singh",
-          gender: "Boys",
-          phone: "9876543210",
-          email: "amit@example.com",
-          type: "1BHK",
-          location: "Patna",
-          available: "Yes",
-          facilities: "WiFi, Water, Parking",
-          rent: 4500,
-          deposit: "2000",
-          date: "2025-06-20"
-        }
-      },
-      {
-      images: [
-         "https://i.ibb.co/MDDg5mS8/ab033f282257.jpg",
-      "https://i.ibb.co/6RyXqFhD/c6362eeb3f82.jpg"  
-        ],
-        details: {
-          name: "SONU ACHARYA",
-          gender: "Boys",
-          phone: "6375597949",
-          email: "amit@example.com",
-          type: "1BHK",
-          location: "UDAIPUR SECTOR 5",
-          available: "Yes",
-          facilities: "WiFi, Water, Parking",
-          rent: 4500,
-          deposit: "2000",
-          date: "2025-06-20"
-        }
-      },
-      {
-      
-        images: [
-          
-        ],
-        details: {
-          name: "Rohit Kumar",
-          gender: "Both",
-          phone: "9876543222",
-          email: "rohit@example.com",
-          type: "2BHK",
-          location: "Ranchi",
-          available: "Yes",
-          facilities: "Fridge, AC, Balcony",
-          rent: 4500,
-          deposit: "2500",
-          date: "2025-06-21"
-        }
-      },
-    ];
+    ],
+    details: {
+      name: "sahar wardah",
+      gender: "girls",
+      phone: "9982326164",
+      type: "3bhk",
+      location: "mulla talai udaipur <br>https://maps.app.goo.gl/APA4o7VJ3B4DHWTB8",
+      available: "Yes",
+      facilities:  "boys and alcohol not allowed",
+      rent: "20000",
+      deposit:  "2 month advance",
+      date: "available"
+    }
+  },
+  {
+    images: ["https://i.ibb.co/GvZKMWdN/Whats-App-Image-2025-08-24-at-21-36-22-6a30273b.jpg",
+    "https://i.ibb.co/5gXx93k6/Whats-App-Image-2025-08-24-at-21-21-31-a65896f4.jpg",
+    "https://i.ibb.co/1tPqs86Y/Whats-App-Image-2025-08-24-at-21-21-33-62c1cc72.jpg",
+    "https://i.ibb.co/35vpyG53/Whats-App-Image-2025-08-24-at-21-21-32-cf947cb9.jpg",
+    "https://i.ibb.co/QvLZCRSx/Whats-App-Image-2025-08-24-at-21-21-34-d67a6f85.jpg",
+    "https://i.ibb.co/1GTn2kYY/Whats-App-Image-2025-08-24-at-21-21-34-d3dd6a42.jpg",
+    "https://i.ibb.co/npgF5Qr/Whats-App-Image-2025-08-24-at-21-21-34-f353954a.jpg",
 
-    const container = document.getElementById("rooms-container");
+    ],
+    details: {
+      name: "chirag jain",
+      gender: "girls & family",
+      phone: "70145 43484",
+      type: "2bhk",
+      location: "kakroli <br>https://maps.app.goo.gl/h77RVyk8fEgA1i879",
+      available: "Yes",
+      facilities:  "attached kichen 1 store 1 washroom 1 walldrob 2 storage with furniture and seprate entrence ",
+      rent: "8000",
+      deposit:  "10000",
+      date: "available"
+    }
+  }, 
+  {
+    images: ["https://i.ibb.co/dSy8Kcv/Whats-App-Image-2025-08-24-at-12-44-19-d54f5173.jpg",
+    "https://i.ibb.co/k268hcCR/Whats-App-Image-2025-08-24-at-12-44-30-964e74ee.jpg",
+    "https://i.ibb.co/XxpGQnt0/Whats-App-Image-2025-08-24-at-12-44-38-fa469b61.jpg",
+    "https://i.ibb.co/0yq9DmQ5/Whats-App-Image-2025-08-24-at-12-44-42-b1827387.jpg",
 
-    function renderRooms(data) {
-      container.innerHTML = ""; // Clear previous rooms
-      data.forEach((room, index) => {
-        const card = document.createElement("div");
-        card.className = "room-card";
+    ],
+    details: {
+      name: "kanchan girls hostel",
+      gender: "girls",
+      phone: "9828168085",
+      type: "hostel",
+      location: "sector 4 udaipur <br>https://maps.app.goo.gl/GbhbtatEBB8JXHVv7",
+      available: "Yes",
+      facilities:  "wifi,attach lethbath",
+      rent: "7500[2 sharing]<br>₹6500[3 sharing]",
+      deposit:  "2000",
+      date: "available"
+    }
+  },
+{
+    images: ["https://i.ibb.co/4ZZ0HM1r/Whats-App-Image-2025-08-24-at-21-36-56-457a8b46.jpg",
+    "https://i.ibb.co/dwZbps0x/Whats-App-Image-2025-08-24-at-21-37-01-5bb8ea56.jpg",
+    "https://i.ibb.co/xK4hZyR0/Whats-App-Image-2025-08-24-at-21-37-58-c2e20e89.jpg",
 
-        const sliderId = `slider-${index}`;
-        let sliderHTML = `
-          <div class="slider" id="${sliderId}">
-            ${room.images.map((src, i) => `<img src="${src}" class="${i === 0 ? 'active' : ''}">`).join("")}
-            <button class="slider-btn left" onclick="changeSlide('${sliderId}', -1)">&#8592;</button>
-            <button class="slider-btn right" onclick="changeSlide('${sliderId}', 1)">&#8594;</button>
-          </div>`;
+    ],
+    details: {
+      name: "praj boys & girls hostel",
+      gender: "both",
+      phone: "9694857788",
+      type: "hostel",
+      location: "sector 3 udaipur <br>https://maps.app.goo.gl/1BrGT1yQEVZbaZN76",
+      available: "Yes",
+      facilities:  "wifi,washing machine, r.o.,cctv,sunday special",
+      rent: "10000[2 sharing]",
+      deposit:  "advance",
+      date: "available"
+    }
+  },  
+{
+    images: ["https://i.ibb.co/wZ8Mymj1/Whats-App-Image-2025-08-24-at-12-12-15-aee9a1ea.jpg",
+    "https://i.ibb.co/Hf4pB3J8/Whats-App-Image-2025-08-24-at-12-12-15-a09bbeca.jpg",
+    "https://i.ibb.co/rK9V5JLy/Whats-App-Image-2025-08-24-at-12-12-18-ef36ff53.jpg",
 
-        const d = room.details;
-        let detailHTML = `
-          <div class="room-details">
-            <p><strong>Name:</strong> ${d.name}</p>
-            <p><strong>Gender:</strong> ${d.gender}</p>
-            <p><strong>Phone:</strong> ${d.phone}</p>
-            <p><strong>Email:</strong> ${d.email}</p>
-            <p><strong>Room Type:</strong> ${d.type}</p>
-            <p><strong>Location:</strong> ${d.location}</p>
-            <p><strong>Available:</strong> ${d.available}</p>
-            <p><strong>Facilities:</strong> ${d.facilities}</p>
-            <p><strong>Rent:</strong> ₹${d.rent}</p>
-            <p><strong>Deposit:</strong> ₹${d.deposit}</p>
-            <p><strong>Date:</strong> ${d.date}</p>
-          </div>`;
+    ],
+    details: {
+      name: "kanchan girls hostel",
+      gender: "girls",
+      phone: "9828168085",
+      type: "hostel",
+      location: "sector 4 udaipur <br>https://maps.app.goo.gl/GbhbtatEBB8JXHVv7",
+      available: "Yes",
+      facilities:  "wifi,attach lethbath",
+      rent: "7000[2 sharing]<br>₹6500[3 sharing]<br>₹6000[4 sharing]",
+      deposit:  "2000",
+      date: "available"
+    }
+  },
+{
+    images: [
+    "https://i.ibb.co/YBzHbJb8/Whats-App-Image-2025-08-23-at-19-25-25-782632f7.jpg",
+    "https://i.ibb.co/R49Nj3SP/Whats-App-Image-2025-08-23-at-19-25-18-a0505b25.jpg",
+    "https://i.ibb.co/CpRdrwpJ/Whats-App-Image-2025-08-23-at-19-25-27-9edf4d05.jpg",
+    "https://i.ibb.co/JwzJCRT6/Whats-App-Image-2025-08-23-at-19-25-28-5bc6f9a0.jpg",
+    "https://i.ibb.co/b569v7Lp/Whats-App-Image-2025-08-23-at-19-25-24-bc860bf9.jpg",
 
-        card.innerHTML = sliderHTML + detailHTML;
-        container.appendChild(card);
-      });
+    ],
+    details: {
+      name: "Ganpati boys hostel",
+      gender: "boys",
+      phone: "820 934 5379",
+      type: "hostel",
+      location: "sector 6 udaipur <br>https://maps.app.goo.gl/B4V5iBmSDG7DFpYq7",
+      available: "Yes",
+      facilities:  "Parking,fully ventilated room,wifi , r.o.water, attach washroom, personal almirah",
+      rent: "7000[2 sharing]<br> ₹6500[3 sharing]",
+      deposit:  "2000",
+      date: "available"
+    }
+  },
+{
+    images: [
+      "https://i.ibb.co/xKyd4Cpt/Whats-App-Image-2025-08-20-at-10-08-48-9f1e2b7b.jpg",
+      "https://i.ibb.co/dJWSXZPP/Whats-App-Image-2025-08-20-at-10-08-47-14afe74b.jpg",
+      "https://i.ibb.co/hxdzHVDj/Whats-App-Image-2025-08-20-at-10-08-48-21de8e37.jpg",
+      "https://i.ibb.co/Mx5Ccmdb/Whats-App-Image-2025-08-20-at-10-08-46-a74c29bc.jpg",
+    "https://i.ibb.co/4gWV14WG/Whats-App-Image-2025-08-20-at-10-08-48-df4998db.jpg",
+    ],
+    details: {
+      name: "raj mohini",
+      gender: "both",
+      phone: "9414476099",
+      type: "2 bhk",
+      location: "sector 11 udaipur <br>https://maps.app.goo.gl/NaGyxMmBAd7evFdH7",
+      available: "Yes",
+      facilities:  "Parking, 24 hours water,semi modular kitchen",
+      rent: "9000",
+      deposit:  "2 months advance",
+      date: "available"
+    }
+  },
+{
+    images: [
+      "https://i.ibb.co/S4h1NJxQ/1000309701.jpg",
+      "https://i.ibb.co/k26CwysR/1000309703.jpg",
+      "https://i.ibb.co/6cGSNmsZ/Whats-App-Image-2025-08-17-at-23-44-31-9d84b2cd.jpg",
+    
+   
+    ],
+    details: {
+      name: "yash mehta",
+      gender: "both",
+      phone: "8600797329",
+      type: "1bhk",
+      location: "hathipole udaipur <br>https://maps.app.goo.gl/TXkAhuzKJybTqkX17",
+      available: "Yes",
+      facilities:  "Parking, semi furnished",
+      rent: "7000",
+      deposit:  "advance",
+      date: "available"
+    }
+  },
+   {
+    images: [
+      "https://i.ibb.co/zTXfdFr9/Whats-App-Image-2025-08-17-at-23-49-21-b22c03fd.jpg",
+      "https://i.ibb.co/tTBsvB95/Whats-App-Image-2025-08-17-at-23-49-21-f4f99df0.jpg",
+    
+   
+    ],
+    details: {
+      name: "yash mehta",
+      gender: "both",
+      phone: "8600797329",
+      type: "single room",
+      location: "hathipole udaipur <br>https://maps.app.goo.gl/TXkAhuzKJybTqkX17",
+      available: "Yes",
+      facilities:  "Parking, semi furnished",
+      rent: "4000",
+      deposit:  "advance",
+      date: "available"
+    }
+  },
+     
+{
+    images: ["https://i.ibb.co/0Snd4Js/Whats-App-Image-2025-08-17-at-23-38-33-97944087.jpg",
+    "https://i.ibb.co/4kr6DSD/Whats-App-Image-2025-08-17-at-23-38-36-d883ddc3.jpg",
+    "https://i.ibb.co/cX1Bh0jh/Whats-App-Image-2025-08-17-at-23-38-36-34838c34.jpg",
+    "https://i.ibb.co/67FsvG4h/Whats-App-Image-2025-08-17-at-23-38-35-4d610959.jpg",
+    "https://i.ibb.co/23SXpnxs/Whats-App-Image-2025-08-17-at-23-38-27-4f01ae31.jpg",
+    "https://i.ibb.co/qLxn2wpQ/Whats-App-Image-2025-08-17-at-23-38-32-d8a43b69.jpg",
+    "https://i.ibb.co/r2yBvFFh/Whats-App-Image-2025-08-17-at-23-38-31-2cc48dfb.jpg",
+    ],
+    details: {
+      name: "nishit choubisa",
+      gender: "boys",
+      phone: "9509245011",
+      type: "2bhk/3bhk",
+      location: "titardi, savina, udaipur <br>https://maps.app.goo.gl/d558AnZdqTRKK3C57?g_st=aw",
+      available: "Yes",
+      facilities:  "Parking, geyser",
+      rent: "9000- 2bhk<br>13000-3bhk",
+      deposit:  "5000",
+      date: "available"
+    }
+  },
+    {
+    images: ["https://i.ibb.co/Ngzyc2Kc/Whats-App-Image-2025-08-17-at-22-35-08-27a1662d.jpg",
+    "https://i.ibb.co/7tVZn1HQ/Whats-App-Image-2025-08-17-at-22-35-07-ad4d734d.jpg",
+    "https://i.ibb.co/Ng9XcDvD/Whats-App-Image-2025-08-17-at-22-35-02-ccc0d149.jpg",
+   
+    ],
+    details: {
+      name: "virendra singh",
+      gender: "boys",
+      phone: "8696369738",
+      type: "hostel",
+      location: "sector 6 udaipur <br>https://maps.app.goo.gl/jCNJ83DEPhHJvfTUA",
+      available: "Yes",
+      facilities:  "Parking, 24/7 Security,wifi r.o. water, under cctv",
+      rent: "5500- 4 person {sharing}",
+      deposit:  "0",
+      date: "available"
+    }
+  },
+  {
+    images: [
+"https://i.ibb.co/XrhGJT3k/1000307868.jpg",
+"https://i.ibb.co/RkNkMx2y/1000307840.jpg",
+"https://i.ibb.co/YTfR4zkc/1000307847.jpg",
+"https://i.ibb.co/S75Kgb8q/1000307829.jpg",
+"https://i.ibb.co/6RhJnF29/1000308375.jpg"
+    ],
+    details: {
+      name: "Ankit jakar",
+      gender: "boys",
+      phone: "7374926939",
+      type: "hostel",
+      location: "sector 4 udaipur <br>https://maps.app.goo.gl/BAErkTPecQcU5qso6",
+      available: "Yes",
+      facilities: "WiFi, Parking",
+      rent:"6500-3 person<br>₹7000-2 person",
+      deposit: "2000",
+      date:"availabe",
+    }
+  },
+
+{  images: [
+  "https://i.ibb.co/kswHK96S/Whats-App-Image-2025-08-15-at-19-05-28-60380900.jpg",
+"https://i.ibb.co/YTtR1sJH/Whats-App-Image-2025-08-15-at-19-05-28-ae5a2451.jpg",
+"https://i.ibb.co/WWMrSDVr/Whats-App-Image-2025-08-15-at-19-05-25-d9a7c84e.jpg",
+"https://i.ibb.co/FqjG1T26/Whats-App-Image-2025-08-15-at-19-05-19-275f5ca3.jpg",
+"https://i.ibb.co/cKQtkg49/Whats-App-Image-2025-08-15-at-19-05-25-974d3c1b.jpg",
+"https://i.ibb.co/bMxG5WgB/Whats-App-Image-2025-08-15-at-19-05-25-7c6eab59.jpg",
+
+],
+    
+    details: {
+      name: "praveen kumar dak",
+      gender: "family",
+      phone: "8949002800",
+      type: "1bhk",
+      location: "sector 5 udaipur <br>https://maps.app.goo.gl/6W5GpQdLa2iC8aHb9",
+      available: "Yes",
+      facilities: "water , Parking",
+      rent:"14000",
+      deposit: "advance",
+      date:"availabe",
+    }
+},
+
+{  images: [
+"https://i.ibb.co/399DYXtS/Whats-App-Image-2025-08-15-at-19-21-07-a2de1380.jpg",
+"https://i.ibb.co/5xzxLHnN/Whats-App-Image-2025-08-15-at-19-21-09-35f04fd0.jpg",
+"https://i.ibb.co/BVsPHsF2/Whats-App-Image-2025-08-15-at-19-21-11-0f468bec.jpg",
+"https://i.ibb.co/8TsKVq7/Whats-App-Image-2025-08-15-at-19-21-06-98d443a1.jpg",
+],
+    
+    details: {
+      name: "kishan lal bhangari",
+      gender: "family",
+      phone: "9928084032",
+      type: "2bhk",
+      location: "sector 6 udaipur <br>https://maps.app.goo.gl/8ow1JbmV3s4smsFm8",
+      available: "Yes",
+      facilities: "water , Parking",
+      rent:"6000",
+      deposit: "advance",
+      date:"availabe",
+    }
+}
+]
+
+const container = document.getElementById("rooms-container");
+let currentImages = [], currentIndex = 0;
+
+function formatLocation(locStr) {
+  const [text, link] = locStr.split('<br>');
+  return `${text}<br><a href="${link}" target="_blank">${link}</a>`;
+}
+
+function renderRooms(data) {
+  container.innerHTML = "";
+  data.forEach((room, index) => {
+    const card = document.createElement("div");
+    card.className = "room-card";
+    const sliderId = `slider-${index}`;
+    let sliderHTML = room.images.length > 0 ? `
+      <div class="slider" id="${sliderId}">
+        ${room.images.map((src, i) => `<img src="${src}" class="${i===0?'active':''}" onclick="openViewer(${index},${i})">`).join("")}
+        <button class="slider-btn left" onclick="changeSlide('${sliderId}',-1)">←</button>
+        <button class="slider-btn right" onclick="changeSlide('${sliderId}',1)">→</button>
+      </div>` : "";
+
+    const d = room.details;
+    let detailHTML = `
+      <div class="room-details">
+        <p><strong>Name:</strong> ${d.name}</p>
+        <p><strong>Gender:</strong> ${d.gender}</p>
+        <p><strong>Phone:</strong> ${d.phone}</p>
+        <p><strong>Email:</strong> ${d.email}</p>
+        <p><strong>Room Type:</strong> ${d.type}</p>
+        <p><strong>Location:</strong> ${formatLocation(d.location)}</p>
+        <p><strong>Available:</strong> ${d.available}</p>
+        <p><strong>Facilities:</strong> ${d.facilities}</p>
+        <p><strong>Rent:</strong> ₹${d.rent}</p>
+        <p><strong>Deposit:</strong> ₹${d.deposit}</p>
+        <p><strong>Date:</strong> ${d.date}</p>
+      </div>`;
+    card.innerHTML = sliderHTML + detailHTML;
+    container.appendChild(card);
+  });
+}
+
+function changeSlide(sliderId, direction) {
+  const slider = document.getElementById(sliderId);
+  const images = slider.querySelectorAll("img");
+  let activeIndex = Array.from(images).findIndex(img => img.classList.contains("active"));
+  images[activeIndex].classList.remove("active");
+  let newIndex = (activeIndex + direction + images.length) % images.length;
+  images[newIndex].classList.add("active");
+}
+
+function applyFilters() {
+  const gender = document.getElementById("filter-gender").value.toLowerCase();
+  const location = document.getElementById("filter-location").value.toLowerCase();
+  const bhk = document.getElementById("filter-bhk").value.toLowerCase();
+  const budgetVal = document.getElementById("filter-budget").value;
+
+  const filtered = roomsData.filter(room => {
+    const d = room.details;
+
+    // ✅ Gender filter logic (Boys/Girls select होने पर Both भी allow)
+    let matchGender = true;
+    if (gender) {
+      if (gender === "boys" || gender === "girls") {
+        matchGender = (d.gender.toLowerCase() === gender || d.gender.toLowerCase() === "both");
+      } else {
+        matchGender = d.gender.toLowerCase() === gender;
+      }
     }
 
-    function changeSlide(sliderId, direction) {
-      const slider = document.getElementById(sliderId);
-      const images = slider.querySelectorAll("img");
-      let activeIndex = Array.from(images).findIndex(img => img.classList.contains("active"));
-      images[activeIndex].classList.remove("active");
-      let newIndex = (activeIndex + direction + images.length) % images.length;
-      images[newIndex].classList.add("active");
+    const matchLocation = !location || d.location.toLowerCase().includes(location);
+    const matchBHK = !bhk || d.type.toLowerCase() === bhk;
+
+    let matchBudget = true;
+    if (budgetVal) {
+      if (budgetVal === "above") {
+        matchBudget = parseInt(d.rent) > 15000;
+      } else {
+        matchBudget = parseInt(d.rent) <= parseInt(budgetVal);
+      }
     }
 
-    function applyFilters() {
-      const gender = document.getElementById("filter-gender").value.toLowerCase();
-      const budgetVal = document.getElementById("filter-budget").value;
-      const location = document.getElementById("filter-location").value.toLowerCase();
-      const bhk = document.getElementById("filter-bhk").value.toLowerCase();
+    return matchGender && matchLocation && matchBHK && matchBudget;
+  });
 
-      const maxBudget = budgetVal ? parseInt(budgetVal) : Infinity;
+  renderRooms(filtered);
+}
 
-      const filtered = roomsData.filter(room => {
-        const d = room.details;
+function openViewer(roomIndex, imgIndex) {
+  currentImages = roomsData[roomIndex].images;
+  currentIndex = imgIndex;
+  document.getElementById("fullImg").src = currentImages[currentIndex];
+  document.getElementById("fullscreenViewer").style.display = "flex";
+}
 
-        return (
-          (!gender || d.gender.toLowerCase() === gender) &&
-          (!location || d.location.toLowerCase().includes(location)) &&
-          (!bhk || d.type.toLowerCase() === bhk) &&
-          (parseInt(d.rent) <= maxBudget)
-        );
-      });
+function closeViewer() { document.getElementById("fullscreenViewer").style.display = "none"; }
+function nextImage() { currentIndex = (currentIndex + 1) % currentImages.length; document.getElementById("fullImg").src = currentImages[currentIndex]; }
+function prevImage() { currentIndex = (currentIndex - 1 + currentImages.length) % currentImages.length; document.getElementById("fullImg").src = currentImages[currentIndex]; }
 
-      renderRooms(filtered);
-    }
+renderRooms(roomsData);
+async function loadRooms() {
+  const res = await fetch(`https://backend-lwou.onrender.comrooms`);
+  const data = await res.json();
+  renderRooms(data);   // direct render
+}
 
-    // Initial render
-    renderRooms(roomsData);
-  </script>
+loadRooms();
+
+</script>
 </body>
 </html>
+
+
+
+
+
+
