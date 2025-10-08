@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Post a Room</title>
+  <!-- ✅ Google AdSense verification code -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1716946158260812"
+       crossorigin="anonymous"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -57,6 +60,52 @@
       color: green;
       margin-top: 50px;
     }
+    .note {
+      display: none;
+      text-align: center;
+      color: #444;
+      font-size: 14px;
+      margin-top: 10px;
+      font-style: italic;
+    }
+    .whatsapp-button {
+      text-align: center;
+      margin-top: 10px;
+    }
+    .whatsapp-button a {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #25D366;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+    .whatsapp-button a:hover {
+      background-color: #1ebd58;
+    }
+    .loader {
+      display: none;
+      margin: 20px auto;
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #b8860b;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .field-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .field-container input {
+      flex-grow: 1;
+    }
   </style>
 </head>
 <body>
@@ -78,6 +127,7 @@
       <option value="">Select</option>
       <option>1BHK</option>
       <option>2BHK</option>
+      <option>3BHK</option>
       <option>Flat</option>
       <option>Hostel</option>
       <option>PG</option>
@@ -117,6 +167,13 @@
     <input type="url" name="map_link" required>
 
     <button type="submit">Submit</button>
+
+    <p class="note" id="waitNote">Please wait a few seconds...</p>
+    <div class="loader" id="loaderSpinner"></div>
+
+    <div class="whatsapp-button">
+      <a href="https://wa.me/916375597949" target="_blank">📞 Contact Me on WhatsApp</a>
+    </div>
   </form>
 
   <div id="congratsMessage">
@@ -132,9 +189,9 @@
       const container = document.getElementById("personRentFields");
       const div = document.createElement("div");
       div.id = `rentField${rentFieldCount}`;
+      div.className = "field-container";
       div.innerHTML = `
-        <label>Rent for ${rentFieldCount} person(s)</label>
-        <input type="number" name="rent_person_${rentFieldCount}" required>
+        <input type="number" name="rent_person_${rentFieldCount}" placeholder="Rent for ${rentFieldCount} person(s)" required>
         <button type="button" onclick="removePersonRentField(${rentFieldCount})">❌ Remove</button>
       `;
       container.appendChild(div);
@@ -153,9 +210,9 @@
       const container = document.getElementById("photoFields");
       const div = document.createElement("div");
       div.id = `imageField${imageFieldCount}`;
+      div.className = "field-container";
       div.innerHTML = `
-        <label>Image ${imageFieldCount}</label>
-        <input type="file" name="photo_${imageFieldCount}" accept="image/*" required>
+        <input type="file" name="photos" accept="image/*" required>
         <button type="button" onclick="removeImageField(${imageFieldCount})">❌ Remove</button>
       `;
       container.appendChild(div);
@@ -169,82 +226,57 @@
     document.getElementById("roomForm").addEventListener("submit", async function (e) {
       e.preventDefault();
 
+      document.getElementById("waitNote").style.display = "block";
+      document.getElementById("loaderSpinner").style.display = "block";
+
       const form = e.target;
-      const formData = new FormData(form);
+      const formData = new FormData();
 
-      const imageInputs = document.querySelectorAll('input[type="file"][name^="photo_"]');
-      const uploadedLinks = [];
+      // Text fields
+      formData.append("name", form.name.value);
+      formData.append("phone", form.phone.value);
+      formData.append("email", form.email.value);
+      formData.append("room_type", form.room_type.value);
+      formData.append("gender", form.gender.value);
+      formData.append("facilities", form.facilities.value);
+      formData.append("deposit", form.deposit.value);
+      formData.append("available_from", form.available_from.value);
+      formData.append("location", form.location.value);
+      formData.append("map_link", form.map_link.value);
 
-      for (let input of imageInputs) {
-        const file = input.files[0];
-        if (!file) continue;
-
-        const fullBase64 = await toBase64(file);
-        const base64 = fullBase64.split(",")[1];
-
-        const res = await fetch("https://api.imgbb.com/1/upload?key=9a995e9e45e2bd450029bd6cdafe22c3", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({ image: base64 })
-        });
-
-        const data = await res.json();
-        if (data.success) {
-          uploadedLinks.push(data.data.url);
-        } else {
-          alert("❌ ImgBB Upload Failed: " + data.error.message);
-          return;
-        }
-      }
-
+      // Rent per person
       const rentPerPerson = {};
       for (let i = 1; i <= rentFieldCount; i++) {
-        const rentValue = formData.get(`rent_person_${i}`);
+        const rentValue = form[`rent_person_${i}`]?.value;
         if (rentValue) rentPerPerson[i] = rentValue;
       }
+      formData.append("rent_by_person", JSON.stringify(rentPerPerson));
 
-      const jsonPayload = {
-        name: formData.get("name"),
-        phone: formData.get("phone"),
-        email: formData.get("email"),
-        room_type: formData.get("room_type"),
-        gender: formData.get("gender"),
-        facilities: formData.get("facilities"),
-        deposit: formData.get("deposit"),
-        available_from: formData.get("available_from"),
-        location: formData.get("location"),
-        map_link: formData.get("map_link"),
-        rent_by_person: rentPerPerson,
-        imageLinks: uploadedLinks
-      };
+      // Photos
+      const imageInputs = document.querySelectorAll('input[type="file"][name="photos"]');
+      imageInputs.forEach(input => {
+        if (input.files.length > 0) {
+          formData.append("photos", input.files[0]);
+        }
+      });
 
       try {
-        const response = await fetch("http://localhost:3000/submit-form", {
+        await fetch("https://backend-lwou.onrender.com", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(jsonPayload)
+          body: formData
         });
-
-        const result = await response.json();
-        if (result.success) {
-          form.style.display = "none";
-          document.getElementById("congratsMessage").style.display = "block";
-        } else {
-          alert("❌ Failed: " + result.message);
-        }
+        // Ignore response success or failure
       } catch (err) {
-        alert("❌ Network Error: " + err.message);
+        // Ignore network errors too
+      } finally {
+        // Hamesha congratulations message dikhaye aur form chhupa de
+        form.style.display = "none";
+        document.getElementById("congratsMessage").style.display = "block";
+
+        document.getElementById("waitNote").style.display = "none";
+        document.getElementById("loaderSpinner").style.display = "none";
       }
     });
-
-    function toBase64(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-    }
   </script>
 </body>
 </html>
